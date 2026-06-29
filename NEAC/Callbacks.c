@@ -741,3 +741,174 @@ __int64 __fastcall CallbackForEachDriver(unsigned __int8 *a1, unsigned __int8 *a
   while ( v6 && v6 == v7 );
   return (v6 - v7);
 }
+
+__int64 __fastcall CallbackForEachProcessCreated(__int64 a1, __int64 a2)
+{
+  HANDLE CurrentProcessId; // rbx
+  HANDLE ProcessId; // r14
+  LONGLONG v5; // rsi
+  __int64 v6; // r9
+  unsigned __int64 v7; // rax
+  unsigned __int64 v8; // r15
+  char *PoolWithTag; // rax
+  __int64 v10; // rsi
+  unsigned int v11; // eax
+  __int64 v12; // rcx
+  __int64 v13; // rax
+  __int64 v14; // rdx
+  __int64 v15; // r8
+  unsigned __int64 v16; // r8
+  __int128 v17; // xmm1
+  __int64 v19; // [rsp+0h] [rbp-178h] BYREF
+  _QWORD v20[2]; // [rsp+20h] [rbp-158h] BYREF
+  __int64 v21; // [rsp+30h] [rbp-148h] BYREF
+  PVOID Callers[2]; // [rsp+40h] [rbp-138h] BYREF
+  _QWORD v23[31]; // [rsp+50h] [rbp-128h]
+  __int64 v24; // [rsp+148h] [rbp-30h]
+
+  if ( (*(a2 + 4) & 1) == 0 )
+  {
+    if ( *(a2 + 8) )
+    {
+      CurrentProcessId = PsGetCurrentProcessId();
+      ProcessId = PsGetProcessId(*(a2 + 8));
+      if ( sub_1400361B0(qword_14115A718, 6) )
+      {
+        if ( WeirdFastMutexFunction(qword_14115D958, ProcessId) )
+        {
+          v5 = CountMsFromSysStart();
+          ExAcquireFastMutex(qword_14115D9A8);
+          if ( sub_140064A30(qword_14115D9A8, CurrentProcessId, qword_14115DF68, &v21) && (v5 - v21) < 0xBB9 )
+          {
+            sub_140064910(qword_14115D9A8, CurrentProcessId, qword_14115DF68, 0);
+            ExReleaseFastMutex(qword_14115D9A8);
+            goto LABEL_24;
+          }
+          LOBYTE(v6) = 1;
+          sub_140064910(qword_14115D9A8, CurrentProcessId, qword_14115DF68, v6);
+          ExReleaseFastMutex(qword_14115D9A8);
+          v7 = sub_1400361D0(qword_14115A718);
+          if ( v7 )
+          {
+            v8 = v7;
+            PoolWithTag = ExAllocatePoolWithTag(PagedPool, 0x529u, 0x53425458u);
+            if ( PoolWithTag )
+            {
+              v10 = PoolWithTag;
+              memset(PoolWithTag + 5, 0, 0x524u);
+              *v10 = 6;
+              *(v10 + 1) = 1321;
+              *(v10 + 5) = CountMsFromSysStart();
+              *(v10 + 13) = v8;
+              *(v10 + 21) = CurrentProcessId;
+              *(v10 + 25) = PsGetCurrentThreadId();
+              *(v10 + 29) = ProcessId;
+              *(v10 + 33) = **(a2 + 40);
+              *(v10 + 37) = *(a2 + 32);
+              v20[0] = 66977792;
+              v20[1] = v10 + 41;
+              sub_140066A80(CurrentProcessId, v20);
+              v11 = sub_14006C090(0x20u, Callers);
+              if ( v11 )
+              {
+                v12 = v11;
+                if ( v11 < 8 || (v10 - Callers + 1065) < 0x20 )
+                {
+                  v13 = 0;
+LABEL_13:
+                  v14 = v13;
+                  v15 = v12 & 3;
+                  if ( (v12 & 3) != 0 )
+                  {
+                    v14 = v13;
+                    do
+                    {
+                      *(v10 + 8 * v14 + 1065) = Callers[v14];
+                      ++v14;
+                      --v15;
+                    }
+                    while ( v15 );
+                  }
+                  if ( (v13 - v12) <= 0xFFFFFFFFFFFFFFFCuLL )
+                  {
+                    do
+                    {
+                      *(v10 + 8 * v14 + 1065) = Callers[v14];
+                      *(v10 + 8 * v14 + 1073) = Callers[v14 + 1];
+                      *(v10 + 8 * v14 + 1081) = v23[v14];
+                      *(v10 + 8 * v14 + 1089) = v23[v14 + 1];
+                      v14 += 4;
+                    }
+                    while ( v12 != v14 );
+                  }
+                  goto LABEL_23;
+                }
+                v13 = v11 & 0xFFFFFFFC;
+                v16 = 0;
+                do
+                {
+                  v17 = *&v23[v16 / 8];
+                  *(v10 + v16 + 1065) = *&Callers[v16 / 8];
+                  *(v10 + v16 + 1081) = v17;
+                  v16 += 32LL;
+                }
+                while ( ((8 * v12) & 0xFFFFFFFFFFFFFFE0uLL) != v16 );
+                if ( v13 != v12 )
+                  goto LABEL_13;
+              }
+LABEL_23:
+              ExAcquireFastMutex(qword_14115A718);
+              sub_140036210(qword_14115A718, v10);
+              ExReleaseFastMutex(qword_14115A718);
+              sub_140036280(qword_14115A718);
+            }
+          }
+        }
+      }
+    }
+  }
+LABEL_24:
+  if ( (&v19 ^ v24) != _security_cookie )
+    JUMPOUT(0x14005EA96LL);
+  return 0;
+}
+
+__int64 __fastcall CallbackForEachProcessClosed(__int64 a1, __int64 a2)
+{
+  HANDLE ProcessId; // rbx
+  HANDLE CurrentProcessId; // rdi
+  struct _FAST_MUTEX *v5; // rbx
+  char v6; // al
+  int v7; // ecx
+  char v8; // al
+
+  ProcessId = PsGetProcessId(*(a2 + 8));
+  CurrentProcessId = PsGetCurrentProcessId();
+  if ( qword_14115A7A0 != CurrentProcessId )
+  {
+    if ( qword_14115A7A0 == ProcessId )
+    {
+      v8 = WeirdFastMutexFunction(qword_14115D958, CurrentProcessId);
+      v7 = -2049;
+      if ( !v8 )
+        **(a2 + 32) &= ~0x10u;
+    }
+    else
+    {
+      if ( !WeirdFastMutexFunction(qword_14115D970, ProcessId) )
+        return 0;
+      if ( WeirdFastMutexFunction(qword_14115D968, CurrentProcessId) )
+        return 0;
+      v5 = qword_14115D998;
+      PsGetCurrentThreadId();
+      if ( sub_1400645C0(v5) )
+        return 0;
+      v6 = WeirdFastMutexFunction(qword_14115D958, CurrentProcessId);
+      v7 = -17;
+      if ( v6 )
+        return 0;
+    }
+    **(a2 + 32) &= v7;
+  }
+  return 0;
+}

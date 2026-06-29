@@ -1513,3 +1513,77 @@ LABEL_13:
   return SystemInformation;
 }
 
+__int64 __fastcall CreateFalseCopyOf_PML4_InsideSusProc(PEPROCESS Process, __int64 a2)
+{
+  // [COLLAPSED LOCAL DECLARATIONS. PRESS NUMPAD "+" TO EXPAND]
+
+  v4 = STATUS_NOT_SUPPORTED;
+  if ( return0() )
+    goto LABEL_10;
+  if ( *a2 == Process )
+  {
+    v4 = 0;
+    if ( (v14 ^ v19) != _security_cookie )
+      goto LABEL_14;
+    return v4;
+  }
+  v4 = 0x40000000;
+  if ( *a2 )
+  {
+LABEL_10:
+    if ( (v14 ^ v19) != _security_cookie )
+      goto LABEL_14;
+    return v4;
+  }
+  v5 = *(Process + 5);
+  v6 = v5 & 0xFFFFFFFFFFFFF000uLL;
+  MappingAddress = MmAllocateMappingAddress(0x1000u, 0x53425458u);
+  if ( !MappingAddress )
+  {
+    v15.m128_u64[0] = 0x1E2FE6997C448FE9LL;
+    v15.m128_u64[1] = 0x1585C53D74704EABLL;
+    v16.m128_u64[0] = 0x5CAB459272FFF049LL;
+    v16.m128_u64[1] = 0x919655DB2FEDD636uLL;
+    v17.m128_u64[0] = 0x6A0F82FC102DEE8FLL;
+    v17.m128_u64[1] = 0x54D5E54D151D6EC4LL;
+    v18.m128_u64[0] = 0x5CAB4592728FD569LL;
+    v18.m128_u64[1] = 0x919655DB2FEDD636uLL;
+    v15 = _mm_xor_ps(v15, v17);
+    v16 = _mm_xor_ps(v16, v18);                 // Failed to map p5
+    MainLogFunction(128, &unk_14016FCE0, &v15, v6);
+    v4 = -1073741670;
+    goto LABEL_10;
+  }
+  v8 = MappingAddress;
+  v9 = sub_140003150(MappingAddress);
+  *v9 |= 0x103u;
+  *v9 = (SHR12(v6) << 12) & 0xFFFFFFFFF000LL | *v9 & 0xFFFF000000000FFFuLL;
+  __invlpg(v8);
+  ContiguousMemory = MmAllocateContiguousMemory(0x1000u, -1LL);
+  if ( ContiguousMemory )
+  {
+    v11 = ContiguousMemory;
+    v12 = MmGetPhysicalAddress(ContiguousMemory).QuadPart & 0xFFFFFFFFFF000LL | v5 & 0xFFF0000000000FFFuLL;
+    memove(v11, v8, 0x1000u);
+    *(a2 + 8) = PsGetProcessId(Process);
+    *a2 = Process;
+    *(a2 + 16) = v5;
+    *(a2 + 24) = v12;
+    *(a2 + 32) = v11;
+    v4 = 0;
+    (memset)(v11, 0, 2048);
+    _InterlockedExchange64(Process + 5, v12);
+    (sub_140003C80)(sub_14006B8C0, a2);
+  }
+  else
+  {
+    v4 = STATUS_INSUFFICIENT_RESOURCES;
+  }
+  *sub_140003150(v8) = 0;
+  __invlpg(v8);
+  MmFreeMappingAddress(v8, 0x53425458u);
+  if ( (v14 ^ v19) != _security_cookie )
+LABEL_14:
+    JUMPOUT(0x14006BB68LL);
+  return v4;
+}
